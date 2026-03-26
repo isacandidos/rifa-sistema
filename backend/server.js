@@ -193,7 +193,7 @@ app.post('/api/cleanup', async (req, res) => {
 app.post('/api/admin/login', (req, res) => {
   const { username, password } = req.body;
   if (username === 'admin' && password === '485327') {
-    res.json({ token: 'admin:1234', success: true });
+    res.json({ token: 'admin:485327', success: true });
   } else {
     res.status(401).json({ error: 'Credenciais inválidas' });
   }
