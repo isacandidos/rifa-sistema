@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin – Rifa Vô Horácio</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;600;700;800&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --green: #1a7a4a;
+      --green-light: #25a366;
+      --green-dark: #0f5233;
+      --gold: #f5a623;
+      --bg: #f4f9f6;
+      --white: #ffffff;
+      --gray: #6b7280;
+      --gray-light: #e8f0eb;
+      --red: #e53e3e;
+      --text: #1a2e22;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Nunito', sans-serif; background: var(--bg); color: var(--text); }
+
+    /* LOGIN */
+    #login-screen {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, var(--green-dark), var(--green-light));
+    }
+    .login-card {
+      background: white;
+      border-radius: 20px;
+      padding: 40px 32px;
+      width: 100%;
+      max-width: 360px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+      text-align: center;
+    }
+    .login-card h1 {
+      font-family: 'Baloo 2', cursive;
+      font-size: 1.6rem;
+      font-weight: 800;
+      color: var(--green-dark);
+      margin-bottom: 6px;
+    }
+    .login-card p { font-size: 13px; color: var(--gray); margin-bottom: 28px; }
+    .form-group { margin-bottom: 16px; text-align: left; }
+    .form-group label { display: block; font-size: 13px; font-weight: 700; color: var(--green-dark); margin-bottom: 6px; }
+    .form-group input {
+      width: 100%; padding: 12px 14px;
+      border: 2px solid var(--gray-light);
+      border-radius: 12px;
+      font-family: 'Nunito', sans-serif;
+      font-size: 15px; outline: none;
+      transition: border-color .2s;
+    }
+    .form-group input:focus { border-color: var(--green-light); }
+    .btn-login {
+      width: 100%; padding: 14px;
+      background: linear-gradient(135deg, var(--green), var(--green-light));
+      color: white; border: none; border-radius: 14px;
+      font-family: 'Baloo 2', cursive;
+      font-size: 16px; font-weight: 800;
+      cursor: pointer;
+    }
+    #login-error { color: var(--red); font-size: 13px; margin-top: 12px; display: none; }
+
+    /* ADMIN */
+    #admin-screen { display: none; }
+
+    .top-bar {
+      background: linear-gradient(135deg, var(--green-dark), var(--green));
+      color: white; padding: 16px 24px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .top-bar h1 { font-family: 'Baloo 2', cursive; font-size: 1.2rem; font-weight: 800; }
+    .btn-logout {
+      background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3);
+      color: white; border-radius: 10px; padding: 6px 14px;
+      font-family: 'Nunito', sans-serif; font-size: 13px; font-weight: 700;
+      cursor: pointer;
+    }
+
+    .admin-content { padding: 24px 20px; max-width: 1200px; margin: 0 auto; }
+
+    /* Stats */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      gap: 14px; margin-bottom: 28px;
+    }
+    .stat-card {
+      background: white; border-radius: 16px; padding: 18px 16px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+      text-align: center;
+    }
+    .stat-card .stat-icon { font-size: 28px; margin-bottom: 6px; }
+    .stat-card .stat-value {
+      font-family: 'Baloo 2', cursive;
+      font-size: 26px; font-weight: 800; color: var(--green-dark);
+    }
+    .stat-card .stat-label { font-size: 12px; color: var(--gray); margin-top: 2px; }
+
+    /* Filters */
+    .table-header {
+      display: flex; flex-wrap: wrap; gap: 12px;
+      align-items: center; justify-content: space-between;
+      margin-bottom: 16px;
+    }
+    .table-header h2 { font-family: 'Baloo 2', cursive; font-size: 1.2rem; font-weight: 800; }
+    .filter-row { display: flex; gap: 8px; flex-wrap: wrap; }
+    .filter-pill {
+      padding: 6px 14px; border-radius: 20px;
+      border: 2px solid var(--gray-light);
+      background: white; font-size: 12px; font-weight: 700;
+      cursor: pointer; color: var(--gray);
+    }
+    .filter-pill.active { background: var(--green); color: white; border-color: var(--green); }
+    .search-admin {
+      padding: 8px 14px; border: 2px solid var(--gray-light);
+      border-radius: 12px; font-family: 'Nunito', sans-serif;
+      font-size: 13px; outline: none; min-width: 200px;
+    }
+    .search-admin:focus { border-color: var(--green-light); }
+
+    /* Table */
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; background: white; border-radius: 16px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.06); }
+    thead { background: var(--green-dark); color: white; }
+    thead th { padding: 14px 16px; text-align: left; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; }
+    tbody tr { border-bottom: 1px solid var(--gray-light); transition: background .15s; }
+    tbody tr:last-child { border-bottom: none; }
+    tbody tr:hover { background: #f0faf5; }
+    tbody td { padding: 14px 16px; font-size: 13px; vertical-align: top; }
+    .nums-cell { max-width: 200px; word-break: break-all; color: var(--green); font-weight: 700; font-size: 12px; }
+
+    .badge-status {
+      display: inline-block; padding: 3px 10px; border-radius: 20px;
+      font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: .5px;
+    }
+    .badge-confirmed { background: #d1fae5; color: #065f46; }
+    .badge-pending { background: #fff8e7; color: #92400e; }
+    .badge-expired { background: #fee2e2; color: #7f1d1d; }
+
+    .action-btn {
+      padding: 5px 10px; border-radius: 8px; border: none;
+      font-size: 12px; font-weight: 700; cursor: pointer;
+      font-family: 'Nunito', sans-serif;
+    }
+    .btn-confirm-pay { background: #d1fae5; color: #065f46; }
+    .btn-confirm-pay:hover { background: #a7f3d0; }
+    .btn-delete { background: #fee2e2; color: #7f1d1d; margin-left: 4px; }
+    .btn-delete:hover { background: #fecaca; }
+
+    .empty-row td { text-align: center; color: var(--gray); padding: 40px; }
+
+    /* refresh */
+    .btn-refresh {
+      background: var(--green); color: white;
+      border: none; border-radius: 10px;
+      padding: 8px 16px; font-size: 13px; font-weight: 700;
+      cursor: pointer; font-family: 'Nunito', sans-serif;
+    }
+
+    .alert-admin {
+      position: fixed; top: 16px; left: 50%;
+      transform: translateX(-50%);
+      background: var(--green-dark); color: white;
+      padding: 10px 22px; border-radius: 12px;
+      font-size: 13px; font-weight: 700; z-index: 999;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+    }
+    .alert-admin.err { background: var(--red); }
+
+    @media (max-width: 600px) {
+      thead th:nth-child(4), tbody td:nth-child(4) { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="login-card">
+    <div style="font-size:36px;margin-bottom:10px;">🔐</div>
+    <h1>Painel Admin</h1>
+    <p>Rifa Centro Espírita Vô Horácio</p>
+    <div class="form-group">
+      <label>Usuário</label>
+      <input type="text" id="login-user" placeholder="admin" />
+    </div>
+    <div class="form-group">
+      <label>Senha</label>
+      <input type="password" id="login-pass" placeholder="••••••" onkeydown="if(event.key==='Enter')doLogin()" />
+    </div>
+    <button class="btn-login" onclick="doLogin()">Entrar</button>
+    <p id="login-error">Usuário ou senha incorretos.</p>
+  </div>
+</div>
+
+<!-- ADMIN -->
+<div id="admin-screen">
+  <div class="top-bar">
+    <h1>🎟️ Painel Administrativo</h1>
+    <button class="btn-logout" onclick="logout()">Sair</button>
+  </div>
+
+  <div class="admin-content">
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-icon">🟢</div>
+        <div class="stat-value" id="s-available">–</div>
+        <div class="stat-label">Disponíveis</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">🟡</div>
+        <div class="stat-value" id="s-reserved">–</div>
+        <div class="stat-label">Reservados</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">🔴</div>
+        <div class="stat-value" id="s-sold">–</div>
+        <div class="stat-label">Vendidos</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">💰</div>
+        <div class="stat-value" id="s-revenue">–</div>
+        <div class="stat-label">Arrecadado</div>
+      </div>
+    </div>
+
+    <div class="table-header">
+      <h2>Participantes</h2>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
+        <input class="search-admin" type="text" id="search-admin" placeholder="🔍 Buscar nome ou tel..." oninput="renderTable()" />
+        <div class="filter-row">
+          <button class="filter-pill active" data-f="all" onclick="setFilter(this,'all')">Todos</button>
+          <button class="filter-pill" data-f="confirmed" onclick="setFilter(this,'confirmed')">Confirmados</button>
+          <button class="filter-pill" data-f="pending" onclick="setFilter(this,'pending')">Aguardando</button>
+          <button class="filter-pill" data-f="expired" onclick="setFilter(this,'expired')">Expirados</button>
+        </div>
+        <button class="btn-refresh" onclick="loadDashboard()">🔄 Atualizar</button>
+      </div>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Nome</th>
+            <th>Telefone</th>
+            <th>Números</th>
+            <th>Total</th>
+            <th>Status</th>
+            <th>Data</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody id="purchases-table"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script>
+  const API = 'https://rifa-sistema-production.up.railway.app/api';
+  let token = '';
+  let allPurchases = [];
+  let currentFilter = 'all';
+
+  async function doLogin() {
+    const user = document.getElementById('login-user').value;
+    const pass = document.getElementById('login-pass').value;
+    try {
+      const res = await fetch(`${API}/admin/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: user, password: pass })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        token = data.token;
+        document.getElementById('login-screen').style.display = 'none';
+        document.getElementById('admin-screen').style.display = 'block';
+        loadDashboard();
+      } else {
+        document.getElementById('login-error').style.display = 'block';
+      }
+    } catch (e) {
+      document.getElementById('login-error').textContent = 'Erro de conexão.';
+      document.getElementById('login-error').style.display = 'block';
+    }
+  }
+
+  function logout() {
+    token = '';
+    document.getElementById('admin-screen').style.display = 'none';
+    document.getElementById('login-screen').style.display = 'flex';
+  }
+
+  async function loadDashboard() {
+    try {
+      const res = await fetch(`${API}/admin/dashboard`, {
+        headers: { 'x-admin-auth': token }
+      });
+      const data = await res.json();
+      document.getElementById('s-available').textContent = data.available;
+      document.getElementById('s-reserved').textContent = data.reserved;
+      document.getElementById('s-sold').textContent = data.sold;
+      document.getElementById('s-revenue').textContent = `R$${data.revenue}`;
+      allPurchases = data.purchases || [];
+      renderTable();
+    } catch (e) {
+      alert('Erro ao carregar dashboard.');
+    }
+  }
+
+  function setFilter(el, f) {
+    document.querySelectorAll('.filter-pill').forEach(b => b.classList.remove('active'));
+    el.classList.add('active');
+    currentFilter = f;
+    renderTable();
+  }
+
+  function renderTable() {
+    const search = document.getElementById('search-admin').value.toLowerCase();
+    const tbody = document.getElementById('purchases-table');
+    tbody.innerHTML = '';
+
+    let filtered = allPurchases.filter(p => {
+      if (currentFilter !== 'all' && p.status !== currentFilter) return false;
+      if (search && !p.name.toLowerCase().includes(search) && !p.phone.includes(search)) return false;
+      return true;
+    });
+
+    if (filtered.length === 0) {
+      tbody.innerHTML = '<tr class="empty-row"><td colspan="8">Nenhum registro encontrado</td></tr>';
+      return;
+    }
+
+    filtered.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+    filtered.forEach(p => {
+      const date = new Date(p.createdAt).toLocaleString('pt-BR');
+      const badgeClass = p.status === 'confirmed' ? 'badge-confirmed' : p.status === 'pending' ? 'badge-pending' : 'badge-expired';
+      const confirmBtn = p.status === 'pending' ? `<button class="action-btn btn-confirm-pay" onclick="confirmPurchase('${p.id}')">✅ Confirmar</button>` : '';
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${p.id}</td>
+        <td><strong>${p.name}</strong></td>
+        <td>${p.phone}</td>
+        <td class="nums-cell">${p.numbers.sort((a,b)=>a-b).join(', ')}</td>
+        <td><strong>R$ ${p.total},00</strong></td>
+        <td><span class="badge-status ${badgeClass}">${p.statusLabel}</span></td>
+        <td>${date}</td>
+        <td>${confirmBtn}<button class="action-btn btn-delete" onclick="deletePurchase('${p.id}')">🗑️</button></td>
+      `;
+      tbody.appendChild(tr);
+    });
+  }
+
+  async function confirmPurchase(id) {
+    if (!confirm('Confirmar pagamento desta reserva?')) return;
+    try {
+      const res = await fetch(`${API}/confirm/${id}`, {
+        method: 'POST',
+        headers: { 'x-admin-auth': token }
+      });
+      if (res.ok) { showAlert('Pagamento confirmado! ✅'); loadDashboard(); }
+      else { const d = await res.json(); showAlert(d.error, true); }
+    } catch (e) { showAlert('Erro de conexão', true); }
+  }
+
+  async function deletePurchase(id) {
+    if (!confirm('Deletar esta reserva e liberar os números?')) return;
+    try {
+      const res = await fetch(`${API}/admin/purchase/${id}`, {
+        method: 'DELETE',
+        headers: { 'x-admin-auth': token }
+      });
+      if (res.ok) { showAlert('Reserva removida.'); loadDashboard(); }
+      else showAlert('Erro ao remover.', true);
+    } catch (e) { showAlert('Erro de conexão', true); }
+  }
+
+  function showAlert(msg, err = false) {
+    const el = document.createElement('div');
+    el.className = 'alert-admin' + (err ? ' err' : '');
+    el.textContent = msg;
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), 3000);
+  }
+
+  setInterval(loadDashboard, 30000);
+</script>
+</body>
+</html>

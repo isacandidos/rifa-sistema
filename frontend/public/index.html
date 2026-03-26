@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Rifa Solidária – Centro Espírita Vô Horácio</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;600;700;800&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --green: #1a7a4a;
+      --green-light: #25a366;
+      --green-dark: #0f5233;
+      --gold: #f5a623;
+      --gold-light: #ffc947;
+      --bg: #f4f9f6;
+      --white: #ffffff;
+      --gray: #6b7280;
+      --gray-light: #e8f0eb;
+      --red: #e53e3e;
+      --text: #1a2e22;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Nunito', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* ---- HEADER ---- */
+    header {
+      background: linear-gradient(135deg, var(--green-dark) 0%, var(--green) 60%, var(--green-light) 100%);
+      color: white;
+      padding: 28px 20px 24px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    header::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.04'%3E%3Ccircle cx='30' cy='30' r='20'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+      pointer-events: none;
+    }
+    header .badge {
+      display: inline-block;
+      background: var(--gold);
+      color: var(--green-dark);
+      font-family: 'Baloo 2', cursive;
+      font-weight: 800;
+      font-size: 11px;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      padding: 4px 14px;
+      border-radius: 20px;
+      margin-bottom: 10px;
+    }
+    header h1 {
+      font-family: 'Baloo 2', cursive;
+      font-size: clamp(1.6rem, 5vw, 2.4rem);
+      font-weight: 800;
+      line-height: 1.2;
+      margin-bottom: 6px;
+    }
+    header p.subtitle {
+      font-size: 14px;
+      opacity: 0.88;
+      margin-bottom: 16px;
+    }
+
+    /* Prize card */
+    .prize-card {
+      background: rgba(255,255,255,0.12);
+      border: 1px solid rgba(255,255,255,0.25);
+      border-radius: 16px;
+      padding: 14px 20px;
+      display: inline-flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      justify-content: center;
+      align-items: center;
+      max-width: 560px;
+      margin: 0 auto;
+    }
+    .prize-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 13px;
+      font-weight: 700;
+    }
+    .prize-item span.icon { font-size: 20px; }
+
+    .sorteo {
+      margin-top: 12px;
+      font-size: 13px;
+      opacity: 0.8;
+    }
+    .sorteo strong { color: var(--gold-light); }
+
+    /* ---- MAIN ---- */
+    main {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 24px 16px 60px;
+    }
+
+    /* Info bar */
+    .info-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 24px;
+      justify-content: center;
+    }
+    .info-chip {
+      background: white;
+      border-radius: 12px;
+      padding: 10px 18px;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--green-dark);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .info-chip .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+    .dot-available { background: #25a366; }
+    .dot-reserved { background: #f5a623; }
+    .dot-sold { background: #e53e3e; }
+
+    /* Search & filters */
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 20px;
+      align-items: center;
+    }
+    .search-box {
+      flex: 1;
+      min-width: 200px;
+      position: relative;
+    }
+    .search-box input {
+      width: 100%;
+      padding: 10px 16px 10px 40px;
+      border: 2px solid var(--gray-light);
+      border-radius: 12px;
+      font-family: 'Nunito', sans-serif;
+      font-size: 14px;
+      outline: none;
+      background: white;
+      transition: border-color .2s;
+    }
+    .search-box input:focus { border-color: var(--green-light); }
+    .search-box::before {
+      content: '🔍';
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 14px;
+    }
+    .filter-btn {
+      padding: 10px 16px;
+      border: 2px solid var(--gray-light);
+      border-radius: 12px;
+      background: white;
+      font-family: 'Nunito', sans-serif;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all .2s;
+      color: var(--gray);
+    }
+    .filter-btn.active {
+      border-color: var(--green);
+      background: var(--green);
+      color: white;
+    }
+
+    /* Grid */
+    .grid-section { position: relative; }
+    .loading-overlay {
+      position: absolute; inset: 0;
+      background: rgba(244,249,246,0.85);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 16px;
+      z-index: 10;
+      font-weight: 700;
+      color: var(--green);
+      font-size: 16px;
+      gap: 10px;
+    }
+    .spinner {
+      width: 22px; height: 22px;
+      border: 3px solid var(--gray-light);
+      border-top-color: var(--green);
+      border-radius: 50%;
+      animation: spin .7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    #numbers-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(52px, 1fr));
+      gap: 6px;
+    }
+    .num-btn {
+      aspect-ratio: 1;
+      border-radius: 10px;
+      border: 2px solid transparent;
+      font-family: 'Baloo 2', cursive;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all .15s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: white;
+      color: var(--text);
+      box-shadow: 0 1px 4px rgba(0,0,0,0.07);
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .num-btn:hover:not(:disabled) {
+      transform: scale(1.1);
+      box-shadow: 0 4px 12px rgba(26,122,74,0.2);
+      border-color: var(--green-light);
+    }
+    .num-btn.selected {
+      background: var(--green);
+      color: white;
+      border-color: var(--green-dark);
+      transform: scale(1.05);
+    }
+    .num-btn.reserved {
+      background: #fff8e7;
+      color: #b7791f;
+      border-color: #f5a623;
+      cursor: not-allowed;
+    }
+    .num-btn.sold {
+      background: #fee2e2;
+      color: #9b1c1c;
+      border-color: #fca5a5;
+      cursor: not-allowed;
+    }
+    .num-btn:disabled { cursor: not-allowed; }
+
+    /* Cart / selection bar */
+    #cart-bar {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      background: white;
+      border-top: 3px solid var(--green);
+      padding: 14px 20px;
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      z-index: 100;
+      box-shadow: 0 -4px 24px rgba(0,0,0,0.12);
+      flex-wrap: wrap;
+    }
+    #cart-bar.visible { display: flex; }
+    .cart-info {
+      display: flex;
+      flex-direction: column;
+    }
+    .cart-info .cart-count {
+      font-family: 'Baloo 2', cursive;
+      font-weight: 800;
+      font-size: 15px;
+      color: var(--green-dark);
+    }
+    .cart-info .cart-numbers {
+      font-size: 12px;
+      color: var(--gray);
+      max-width: 220px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .cart-total {
+      font-family: 'Baloo 2', cursive;
+      font-size: 18px;
+      font-weight: 800;
+      color: var(--green);
+    }
+    .btn-pay {
+      background: linear-gradient(135deg, var(--green) 0%, var(--green-light) 100%);
+      color: white;
+      border: none;
+      border-radius: 14px;
+      padding: 12px 24px;
+      font-family: 'Baloo 2', cursive;
+      font-size: 15px;
+      font-weight: 800;
+      cursor: pointer;
+      transition: all .2s;
+      white-space: nowrap;
+    }
+    .btn-pay:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(26,122,74,0.35); }
+    .btn-clear {
+      background: none;
+      border: 2px solid var(--gray-light);
+      border-radius: 10px;
+      padding: 10px 14px;
+      cursor: pointer;
+      font-size: 13px;
+      color: var(--gray);
+      font-family: 'Nunito', sans-serif;
+      font-weight: 700;
+    }
+
+    /* ---- MODAL ---- */
+    .modal-overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.55);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 200;
+      padding: 16px;
+      backdrop-filter: blur(4px);
+    }
+    .modal-overlay.hidden { display: none; }
+    .modal {
+      background: white;
+      border-radius: 20px;
+      padding: 28px 24px;
+      max-width: 440px;
+      width: 100%;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+      animation: slideUp .3s ease;
+    }
+    @keyframes slideUp { from { transform: translateY(30px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+    .modal h2 {
+      font-family: 'Baloo 2', cursive;
+      font-size: 1.4rem;
+      font-weight: 800;
+      color: var(--green-dark);
+      margin-bottom: 6px;
+    }
+    .modal p.modal-sub { font-size: 13px; color: var(--gray); margin-bottom: 20px; }
+
+    .form-group { margin-bottom: 16px; }
+    .form-group label {
+      display: block;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--green-dark);
+      margin-bottom: 6px;
+    }
+    .form-group input {
+      width: 100%;
+      padding: 12px 14px;
+      border: 2px solid var(--gray-light);
+      border-radius: 12px;
+      font-family: 'Nunito', sans-serif;
+      font-size: 15px;
+      outline: none;
+      transition: border-color .2s;
+    }
+    .form-group input:focus { border-color: var(--green-light); }
+    .form-group input.error { border-color: var(--red); }
+
+    .summary-box {
+      background: var(--gray-light);
+      border-radius: 12px;
+      padding: 14px;
+      margin-bottom: 20px;
+      font-size: 13px;
+    }
+    .summary-box .sum-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 6px;
+    }
+    .summary-box .sum-row:last-child { margin-bottom: 0; font-weight: 800; color: var(--green-dark); font-size: 14px; }
+    .summary-box .nums-preview {
+      color: var(--green);
+      font-weight: 700;
+      word-break: break-all;
+    }
+
+    .btn-confirm {
+      width: 100%;
+      padding: 14px;
+      background: linear-gradient(135deg, var(--green) 0%, var(--green-light) 100%);
+      color: white;
+      border: none;
+      border-radius: 14px;
+      font-family: 'Baloo 2', cursive;
+      font-size: 16px;
+      font-weight: 800;
+      cursor: pointer;
+      transition: all .2s;
+      margin-top: 4px;
+    }
+    .btn-confirm:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(26,122,74,0.3); }
+    .btn-cancel {
+      width: 100%;
+      padding: 10px;
+      background: none;
+      border: none;
+      font-family: 'Nunito', sans-serif;
+      font-size: 14px;
+      color: var(--gray);
+      cursor: pointer;
+      margin-top: 8px;
+    }
+
+    /* PIX modal */
+    .pix-box {
+      background: #f0faf5;
+      border: 2px solid var(--green-light);
+      border-radius: 16px;
+      padding: 20px;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+    .pix-box .pix-logo {
+      font-family: 'Baloo 2', cursive;
+      font-size: 22px;
+      font-weight: 800;
+      color: var(--green);
+      margin-bottom: 8px;
+    }
+    .pix-box .pix-key {
+      font-size: 18px;
+      font-weight: 800;
+      color: var(--green-dark);
+      letter-spacing: 1px;
+      margin: 6px 0;
+    }
+    .pix-box .pix-name { font-size: 13px; color: var(--gray); margin-bottom: 12px; }
+    .pix-box .pix-value {
+      font-family: 'Baloo 2', cursive;
+      font-size: 28px;
+      font-weight: 800;
+      color: var(--green);
+      background: white;
+      border-radius: 12px;
+      padding: 10px 20px;
+      display: inline-block;
+      margin-bottom: 6px;
+    }
+    .btn-copy {
+      background: var(--green);
+      color: white;
+      border: none;
+      border-radius: 10px;
+      padding: 8px 20px;
+      font-family: 'Nunito', sans-serif;
+      font-weight: 700;
+      font-size: 13px;
+      cursor: pointer;
+      margin-top: 8px;
+    }
+    .timer-box {
+      background: #fff8e7;
+      border: 2px solid var(--gold);
+      border-radius: 12px;
+      padding: 10px 16px;
+      text-align: center;
+      font-size: 13px;
+      color: #92400e;
+      font-weight: 700;
+      margin-bottom: 16px;
+    }
+    .timer-box #timer { font-size: 18px; font-family: 'Baloo 2', cursive; }
+
+    /* Alert */
+    .alert {
+      position: fixed;
+      top: 20px; left: 50%;
+      transform: translateX(-50%);
+      background: var(--green-dark);
+      color: white;
+      padding: 12px 24px;
+      border-radius: 14px;
+      font-weight: 700;
+      font-size: 14px;
+      z-index: 999;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+      animation: fadeInDown .3s ease;
+      white-space: nowrap;
+    }
+    .alert.error { background: var(--red); }
+    @keyframes fadeInDown { from { opacity: 0; transform: translate(-50%, -10px); } to { opacity: 1; transform: translate(-50%, 0); } }
+
+    /* Footer */
+    footer {
+      text-align: center;
+      padding: 20px;
+      font-size: 12px;
+      color: var(--gray);
+    }
+
+    @media (max-width: 480px) {
+      #numbers-grid { grid-template-columns: repeat(auto-fill, minmax(44px, 1fr)); gap: 5px; }
+      .num-btn { font-size: 12px; border-radius: 8px; }
+      .modal { padding: 22px 18px; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="badge">🎟️ Rifa Solidária</div>
+  <h1>Centro Espírita Vô Horácio</h1>
+  <p class="subtitle">Participe e concorra a prêmios incríveis!</p>
+  <div class="prize-card">
+    <div class="prize-item"><span class="icon">🍟</span> Fritadeira Elétrica</div>
+    <div class="prize-item"><span class="icon">🥔</span> Pacote de Batata Frita</div>
+    <div class="prize-item"><span class="icon">🥤</span> Guaraná Antárctica 200ml</div>
+  </div>
+  <p class="sorteo">Sorteio: <strong>01 de Maio de 2026</strong> &nbsp;·&nbsp; Cada número: <strong>R$ 2,00</strong></p>
+</header>
+
+<main>
+  <div class="info-bar">
+    <div class="info-chip"><span class="dot dot-available"></span> <span id="count-available">–</span> disponíveis</div>
+    <div class="info-chip"><span class="dot dot-reserved"></span> <span id="count-reserved">–</span> reservados</div>
+    <div class="info-chip"><span class="dot dot-sold"></span> <span id="count-sold">–</span> vendidos</div>
+  </div>
+
+  <div class="controls">
+    <div class="search-box">
+      <input type="number" id="search-input" placeholder="Buscar número (ex: 42)" min="1" max="1000" />
+    </div>
+    <button class="filter-btn active" data-filter="all">Todos</button>
+    <button class="filter-btn" data-filter="available">Disponíveis</button>
+  </div>
+
+  <div class="grid-section">
+    <div class="loading-overlay" id="loading">
+      <div class="spinner"></div> Carregando números...
+    </div>
+    <div id="numbers-grid"></div>
+  </div>
+</main>
+
+<!-- Cart bar -->
+<div id="cart-bar">
+  <div class="cart-info">
+    <span class="cart-count" id="cart-count">0 número(s)</span>
+    <span class="cart-numbers" id="cart-numbers-preview"></span>
+  </div>
+  <span class="cart-total" id="cart-total">R$ 0,00</span>
+  <button class="btn-clear" onclick="clearSelection()">Limpar</button>
+  <button class="btn-pay" onclick="openUserModal()">Ir para Pagamento →</button>
+</div>
+
+<!-- Modal: User info -->
+<div class="modal-overlay hidden" id="modal-user">
+  <div class="modal">
+    <h2>✍️ Seus dados</h2>
+    <p class="modal-sub">Precisamos identificar sua compra</p>
+    <div class="summary-box">
+      <div class="sum-row"><span>Números:</span><span class="nums-preview" id="modal-nums-preview">–</span></div>
+      <div class="sum-row"><span>Quantidade:</span><span id="modal-qty">–</span></div>
+      <div class="sum-row"><span>Total:</span><span id="modal-total">–</span></div>
+    </div>
+    <div class="form-group">
+      <label>Nome completo *</label>
+      <input type="text" id="input-name" placeholder="Seu nome completo" />
+    </div>
+    <div class="form-group">
+      <label>Telefone (WhatsApp) *</label>
+      <input type="tel" id="input-phone" placeholder="(00) 00000-0000" />
+    </div>
+    <button class="btn-confirm" onclick="submitReservation()">Continuar para PIX →</button>
+    <button class="btn-cancel" onclick="closeModal('modal-user')">Cancelar</button>
+  </div>
+</div>
+
+<!-- Modal: PIX -->
+<div class="modal-overlay hidden" id="modal-pix">
+  <div class="modal">
+    <h2>💚 Pague via PIX</h2>
+    <p class="modal-sub">Após o pagamento, aguarde a confirmação</p>
+    <div class="timer-box">
+      ⏳ Sua reserva expira em: <span id="timer">30:00</span>
+    </div>
+    <div class="pix-box">
+      <div class="pix-logo">PIX</div>
+      <div class="pix-name">Banco: Nubank</div>
+      <div style="font-size:12px;color:var(--gray);margin-bottom:4px;">Chave CPF:</div>
+      <div class="pix-key">579.482.599-53</div>
+      <div class="pix-name">Centro Espírita Vô Horácio</div>
+      <div class="pix-value" id="pix-amount">R$ 0,00</div>
+      <div style="font-size:12px;color:var(--gray);margin-top:6px;">Identificador da reserva:</div>
+      <div style="font-size:13px;font-weight:700;color:var(--green-dark);margin-top:2px;" id="pix-reservation-id">–</div>
+      <button class="btn-copy" onclick="copyPixKey()">📋 Copiar chave PIX</button>
+    </div>
+    <p style="font-size:12px;color:var(--gray);text-align:center;line-height:1.6;">
+      Após realizar o pagamento, envie o comprovante pelo WhatsApp para confirmar sua reserva. Os números ficam <strong>reservados por 30 minutos</strong>.
+    </p>
+    <button class="btn-cancel" onclick="closeModal('modal-pix'); loadNumbers();">Fechar</button>
+  </div>
+</div>
+
+<footer>Centro Espírita Vô Horácio · Sorteio 01/05/2026 · Rifa solidária</footer>
+
+<script>
+  const API = 'https://rifa-sistema-production.up.railway.app/api';
+  let allNumbers = {};
+  let selected = new Set();
+  let currentFilter = 'all';
+  let timerInterval = null;
+
+  async function loadNumbers() {
+    document.getElementById('loading').style.display = 'flex';
+    try {
+      const res = await fetch(`${API}/numbers`);
+      allNumbers = await res.json();
+      renderGrid();
+      updateCounts();
+    } catch (e) {
+      showAlert('Erro ao carregar números. Verifique se o servidor está rodando.', true);
+    }
+    document.getElementById('loading').style.display = 'none';
+  }
+
+  function renderGrid(filter = currentFilter, search = '') {
+    const grid = document.getElementById('numbers-grid');
+    grid.innerHTML = '';
+    const searchNum = parseInt(search);
+
+    for (let i = 1; i <= 1000; i++) {
+      if (search && i !== searchNum) continue;
+      const status = allNumbers[i] || 'available';
+      if (filter === 'available' && status !== 'available') continue;
+
+      const btn = document.createElement('button');
+      btn.className = `num-btn ${status === 'available' ? (selected.has(i) ? 'selected' : '') : status}`;
+      btn.textContent = i;
+      btn.disabled = (status !== 'available');
+      btn.dataset.num = i;
+
+      if (status === 'available') {
+        btn.addEventListener('click', () => toggleNumber(i, btn));
+      }
+      grid.appendChild(btn);
+    }
+  }
+
+  function updateCounts() {
+    const vals = Object.values(allNumbers);
+    document.getElementById('count-available').textContent = vals.filter(s => s === 'available').length;
+    document.getElementById('count-reserved').textContent = vals.filter(s => s === 'reserved').length;
+    document.getElementById('count-sold').textContent = vals.filter(s => s === 'sold').length;
+  }
+
+  function toggleNumber(n, btn) {
+    if (selected.has(n)) { selected.delete(n); btn.classList.remove('selected'); }
+    else { selected.add(n); btn.classList.add('selected'); }
+    updateCart();
+  }
+
+  function updateCart() {
+    const bar = document.getElementById('cart-bar');
+    const count = selected.size;
+    if (count === 0) { bar.classList.remove('visible'); return; }
+    bar.classList.add('visible');
+
+    const sorted = [...selected].sort((a, b) => a - b);
+    document.getElementById('cart-count').textContent = `${count} número${count > 1 ? 's' : ''} selecionado${count > 1 ? 's' : ''}`;
+    document.getElementById('cart-numbers-preview').textContent = sorted.join(', ');
+    document.getElementById('cart-total').textContent = `R$ ${(count * 2).toFixed(2).replace('.', ',')}`;
+  }
+
+  function clearSelection() {
+    selected.clear();
+    renderGrid();
+    updateCart();
+  }
+
+  function openUserModal() {
+    const sorted = [...selected].sort((a, b) => a - b);
+    document.getElementById('modal-nums-preview').textContent = sorted.join(', ');
+    document.getElementById('modal-qty').textContent = selected.size;
+    document.getElementById('modal-total').textContent = `R$ ${(selected.size * 2).toFixed(2).replace('.', ',')}`;
+    document.getElementById('modal-user').classList.remove('hidden');
+  }
+
+  async function submitReservation() {
+    const name = document.getElementById('input-name').value.trim();
+    const phone = document.getElementById('input-phone').value.trim();
+    if (!name) { document.getElementById('input-name').classList.add('error'); return; }
+    if (!phone) { document.getElementById('input-phone').classList.add('error'); return; }
+
+    document.getElementById('input-name').classList.remove('error');
+    document.getElementById('input-phone').classList.remove('error');
+
+    try {
+      const res = await fetch(`${API}/reserve`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ numbers: [...selected], name, phone })
+      });
+      const data = await res.json();
+
+      if (!res.ok) { showAlert(data.error || 'Erro ao reservar', true); return; }
+
+      closeModal('modal-user');
+      openPixModal(data);
+      clearSelection();
+      loadNumbers();
+    } catch (e) {
+      showAlert('Erro de conexão com o servidor.', true);
+    }
+  }
+
+  function openPixModal(data) {
+    document.getElementById('pix-amount').textContent = `R$ ${data.total.toFixed(2).replace('.', ',')}`;
+    document.getElementById('pix-reservation-id').textContent = data.reservationId;
+    document.getElementById('modal-pix').classList.remove('hidden');
+    startTimer(data.expiresAt);
+  }
+
+  function startTimer(expiresAt) {
+    if (timerInterval) clearInterval(timerInterval);
+    const end = new Date(expiresAt).getTime();
+    timerInterval = setInterval(() => {
+      const diff = end - Date.now();
+      if (diff <= 0) { clearInterval(timerInterval); document.getElementById('timer').textContent = '00:00'; return; }
+      const m = Math.floor(diff / 60000);
+      const s = Math.floor((diff % 60000) / 1000);
+      document.getElementById('timer').textContent = `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+    }, 1000);
+  }
+
+  function copyPixKey() {
+    navigator.clipboard.writeText('579.482.599-53');
+    showAlert('Chave PIX copiada! ✅');
+  }
+
+  function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
+
+  function showAlert(msg, error = false) {
+    const existing = document.querySelector('.alert');
+    if (existing) existing.remove();
+    const el = document.createElement('div');
+    el.className = 'alert' + (error ? ' error' : '');
+    el.textContent = msg;
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), 3500);
+  }
+
+  // Filters
+  document.querySelectorAll('.filter-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      currentFilter = btn.dataset.filter;
+      renderGrid(currentFilter, document.getElementById('search-input').value);
+    });
+  });
+
+  document.getElementById('search-input').addEventListener('input', e => {
+    renderGrid(currentFilter, e.target.value);
+  });
+
+  // Phone mask
+  document.getElementById('input-phone').addEventListener('input', e => {
+    let v = e.target.value.replace(/\D/g, '');
+    if (v.length > 11) v = v.slice(0, 11);
+    if (v.length > 6) v = `(${v.slice(0,2)}) ${v.slice(2,7)}-${v.slice(7)}`;
+    else if (v.length > 2) v = `(${v.slice(0,2)}) ${v.slice(2)}`;
+    else if (v.length > 0) v = `(${v}`;
+    e.target.value = v;
+  });
+
+  // Auto refresh every 60s
+  setInterval(loadNumbers, 60000);
+
+  loadNumbers();
+</script>
+</body>
+</html>
