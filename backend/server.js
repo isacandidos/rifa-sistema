@@ -50,7 +50,7 @@ async function initDB() {
 // --- Auth middleware ---
 function adminAuth(req, res, next) {
   const auth = req.headers['x-admin-auth'];
-  if (auth === 'admin:1234') return next();
+  if (auth === 'admin:485327') return next();
   return res.status(401).json({ error: 'Não autorizado' });
 }
 
@@ -192,7 +192,7 @@ app.post('/api/cleanup', async (req, res) => {
 
 app.post('/api/admin/login', (req, res) => {
   const { username, password } = req.body;
-  if (username === 'admin' && password === '1234') {
+  if (username === 'admin' && password === '485327') {
     res.json({ token: 'admin:1234', success: true });
   } else {
     res.status(401).json({ error: 'Credenciais inválidas' });
