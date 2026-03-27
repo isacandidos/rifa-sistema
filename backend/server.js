@@ -6,20 +6,15 @@ const { Pool } = require('pg');
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-// --- Middlewares ---
 app.use(cors());
 app.use(express.json());
-
-// --- Serve frontend estático ---
 app.use(express.static(path.join(__dirname, '../frontend/public')));
 
-// --- Conexão PostgreSQL ---
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
 });
 
-// --- Inicializa tabelas ---
 async function initDB() {
   await pool.query(`
     CREATE TABLE IF NOT EXISTS numbers (
@@ -34,7 +29,6 @@ async function initDB() {
       status TEXT NOT NULL DEFAULT 'pending',
       total NUMERIC NOT NULL,
       created_at TIMESTAMPTZ NOT NULL,
-      expires_at TIMESTAMPTZ NOT NULL,
       confirmed_at TIMESTAMPTZ
     );
 
@@ -44,27 +38,24 @@ async function initDB() {
       PRIMARY KEY (purchase_id, number)
     );
   `);
-  console.log('✅ Tabelas verificadas/criadas');
+
+  // Migração: remove coluna expires_at se ainda existir
+  await pool.query('ALTER TABLE purchases DROP COLUMN IF EXISTS expires_at;');
+
+  console.log('Tabelas verificadas/criadas');
 }
 
-// --- Auth middleware ---
 function adminAuth(req, res, next) {
   const auth = req.headers['x-admin-auth'];
   if (auth === 'admin:485327') return next();
   return res.status(401).json({ error: 'Não autorizado' });
 }
 
-// ==========================================
-// PUBLIC ROUTES
-// ==========================================
-
-// Get all numbers with their status
 app.get('/api/numbers', async (req, res) => {
   try {
     const { rows } = await pool.query('SELECT number, status FROM numbers');
     const numbersMap = {};
     rows.forEach(r => { numbersMap[r.number] = r.status; });
-
     const result = {};
     for (let i = 1; i <= 1000; i++) {
       result[i] = numbersMap[i] || 'available';
@@ -76,7 +67,6 @@ app.get('/api/numbers', async (req, res) => {
   }
 });
 
-// Reserve numbers (before payment)
 app.post('/api/reserve', async (req, res) => {
   const { numbers, name, phone } = req.body;
   if (!numbers || !Array.isArray(numbers) || numbers.length === 0)
@@ -88,7 +78,6 @@ app.post('/api/reserve', async (req, res) => {
   try {
     await client.query('BEGIN');
 
-    // Trava as linhas para evitar race condition
     const { rows: unavailableRows } = await client.query(
       `SELECT number FROM numbers WHERE number = ANY($1) AND status != 'available'`,
       [numbers]
@@ -102,14 +91,13 @@ app.post('/api/reserve', async (req, res) => {
     }
 
     const reservationId = `RES-${Date.now()}`;
-    const expiresAt = new Date(Date.now() + 30 * 60 * 1000);
     const createdAt = new Date();
     const total = numbers.length * 2;
 
     await client.query(
-      `INSERT INTO purchases (id, name, phone, status, total, created_at, expires_at)
-       VALUES ($1, $2, $3, 'pending', $4, $5, $6)`,
-      [reservationId, name, phone, total, createdAt, expiresAt]
+      `INSERT INTO purchases (id, name, phone, status, total, created_at)
+       VALUES ($1, $2, $3, 'pending', $4, $5)`,
+      [reservationId, name, phone, total, createdAt]
     );
 
     for (const n of numbers) {
@@ -125,7 +113,7 @@ app.post('/api/reserve', async (req, res) => {
     }
 
     await client.query('COMMIT');
-    res.json({ reservationId, total, expiresAt: expiresAt.toISOString() });
+    res.json({ reservationId, total });
   } catch (err) {
     await client.query('ROLLBACK');
     console.error(err);
@@ -135,7 +123,6 @@ app.post('/api/reserve', async (req, res) => {
   }
 });
 
-// Confirm payment
 app.post('/api/confirm/:reservationId', adminAuth, async (req, res) => {
   const { reservationId } = req.params;
   const client = await pool.connect();
@@ -155,8 +142,7 @@ app.post('/api/confirm/:reservationId', adminAuth, async (req, res) => {
     );
 
     const { rows: numRows } = await client.query(
-      'SELECT number FROM purchase_numbers WHERE purchase_id = $1',
-      [reservationId]
+      'SELECT number FROM purchase_numbers WHERE purchase_id = $1', [reservationId]
     );
     for (const { number } of numRows) {
       await client.query(`UPDATE numbers SET status = 'sold' WHERE number = $1`, [number]);
@@ -165,8 +151,7 @@ app.post('/api/confirm/:reservationId', adminAuth, async (req, res) => {
     await client.query('COMMIT');
 
     const { rows: updated } = await client.query('SELECT * FROM purchases WHERE id = $1', [reservationId]);
-    const nums = numRows.map(r => r.number);
-    res.json({ success: true, purchase: { ...updated[0], numbers: nums } });
+    res.json({ success: true, purchase: { ...updated[0], numbers: numRows.map(r => r.number) } });
   } catch (err) {
     await client.query('ROLLBACK');
     console.error(err);
@@ -175,20 +160,6 @@ app.post('/api/confirm/:reservationId', adminAuth, async (req, res) => {
     client.release();
   }
 });
-
-// Expire old reservations manually
-app.post('/api/cleanup', async (req, res) => {
-  try {
-    const cleaned = await cleanupExpired();
-    res.json({ cleaned });
-  } catch (err) {
-    res.status(500).json({ error: 'Erro no cleanup' });
-  }
-});
-
-// ==========================================
-// ADMIN ROUTES
-// ==========================================
 
 app.post('/api/admin/login', (req, res) => {
   const { username, password } = req.body;
@@ -216,11 +187,10 @@ app.get('/api/admin/dashboard', adminAuth, async (req, res) => {
       );
       return {
         id: p.id, name: p.name, phone: p.phone, status: p.status,
-        statusLabel: p.status === 'confirmed' ? 'Confirmado' : p.status === 'pending' ? 'Aguardando' : 'Expirado',
+        statusLabel: p.status === 'confirmed' ? 'Confirmado' : 'Aguardando',
         total: p.total,
         numbers: numRows.map(r => r.number),
         createdAt: p.created_at,
-        expiresAt: p.expires_at,
         confirmedAt: p.confirmed_at || null
       };
     }));
@@ -250,7 +220,6 @@ app.delete('/api/admin/purchase/:id', adminAuth, async (req, res) => {
       await client.query(`UPDATE numbers SET status = 'available' WHERE number = $1`, [number]);
     }
 
-    // ON DELETE CASCADE cuida de purchase_numbers automaticamente
     await client.query('DELETE FROM purchases WHERE id = $1', [req.params.id]);
 
     await client.query('COMMIT');
@@ -264,48 +233,9 @@ app.delete('/api/admin/purchase/:id', adminAuth, async (req, res) => {
   }
 });
 
-// ==========================================
-// CLEANUP
-// ==========================================
-
-async function cleanupExpired() {
-  const client = await pool.connect();
-  try {
-    await client.query('BEGIN');
-
-    const { rows: expired } = await client.query(
-      `SELECT id FROM purchases WHERE status = 'pending' AND expires_at < NOW()`
-    );
-
-    for (const { id } of expired) {
-      const { rows: numRows } = await client.query(
-        'SELECT number FROM purchase_numbers WHERE purchase_id = $1', [id]
-      );
-      for (const { number } of numRows) {
-        await client.query(
-          `UPDATE numbers SET status = 'available' WHERE number = $1 AND status = 'reserved'`, [number]
-        );
-      }
-      await client.query(`UPDATE purchases SET status = 'expired' WHERE id = $1`, [id]);
-    }
-
-    await client.query('COMMIT');
-    return expired.length;
-  } catch (err) {
-    await client.query('ROLLBACK');
-    console.error('Erro no cleanup:', err);
-    return 0;
-  } finally {
-    client.release();
-  }
-}
-
-setInterval(cleanupExpired, 5 * 60 * 1000);
-
-// --- Start ---
 initDB().then(() => {
-  app.listen(PORT, () => console.log(`✅ Backend rodando na porta ${PORT}`));
+  app.listen(PORT, () => console.log(`Backend rodando na porta ${PORT}`));
 }).catch(err => {
-  console.error('❌ Falha ao conectar no banco:', err);
+  console.error('Falha ao conectar no banco:', err);
   process.exit(1);
 });
