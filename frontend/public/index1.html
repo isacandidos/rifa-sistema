@@ -467,18 +467,6 @@
       cursor: pointer;
       margin-top: 8px;
     }
-    .timer-box {
-      background: #fff8e7;
-      border: 2px solid var(--gold);
-      border-radius: 12px;
-      padding: 10px 16px;
-      text-align: center;
-      font-size: 13px;
-      color: #92400e;
-      font-weight: 700;
-      margin-bottom: 16px;
-    }
-    .timer-box #timer { font-size: 18px; font-family: 'Baloo 2', cursive; }
 
     /* Alert */
     .alert {
@@ -590,22 +578,19 @@
   <div class="modal">
     <h2>💚 Pague via PIX</h2>
     <p class="modal-sub">Após o pagamento, aguarde a confirmação</p>
-    <div class="timer-box">
-      ⏳ Sua reserva expira em: <span id="timer">30:00</span>
-    </div>
     <div class="pix-box">
       <div class="pix-logo">PIX</div>
       <div class="pix-name">Banco: Nubank</div>
       <div style="font-size:12px;color:var(--gray);margin-bottom:4px;">Chave CPF:</div>
       <div class="pix-key">579.482.599-53</div>
-      <div class="pix-name">Centro Espírita Vô Horácio - Ivan de Jesus</div>
+      <div class="pix-name">Centro Espírita Vô Horácio</div>
       <div class="pix-value" id="pix-amount">R$ 0,00</div>
       <div style="font-size:12px;color:var(--gray);margin-top:6px;">Identificador da reserva:</div>
       <div style="font-size:13px;font-weight:700;color:var(--green-dark);margin-top:2px;" id="pix-reservation-id">–</div>
       <button class="btn-copy" onclick="copyPixKey()">📋 Copiar chave PIX</button>
     </div>
     <p style="font-size:12px;color:var(--gray);text-align:center;line-height:1.6;">
-      Após realizar o pagamento, envie o comprovante pelo WhatsApp para confirmar sua reserva. Os números ficam <strong>reservados por 30 minutos</strong>.
+      Após realizar o pagamento, envie o comprovante pelo WhatsApp para confirmar sua reserva. Após o pagamento, entre em contato pelo WhatsApp para confirmar sua reserva.
     </p>
     <button class="btn-cancel" onclick="closeModal('modal-pix'); loadNumbers();">Fechar</button>
   </div>
@@ -614,11 +599,10 @@
 <footer>Centro Espírita Vô Horácio · Sorteio 01/05/2026 · Rifa solidária</footer>
 
 <script>
-const API = 'https://rifa-centro-espirita-vo-horacio.up.railway.app/api';
+  const API = 'https://rifa-centro-espirita-vo-horacio.up.railway.app/api';
   let allNumbers = {};
   let selected = new Set();
   let currentFilter = 'all';
-  let timerInterval = null;
 
   async function loadNumbers() {
     document.getElementById('loading').style.display = 'flex';
@@ -727,20 +711,8 @@ const API = 'https://rifa-centro-espirita-vo-horacio.up.railway.app/api';
     document.getElementById('pix-amount').textContent = `R$ ${data.total.toFixed(2).replace('.', ',')}`;
     document.getElementById('pix-reservation-id').textContent = data.reservationId;
     document.getElementById('modal-pix').classList.remove('hidden');
-    startTimer(data.expiresAt);
   }
 
-  function startTimer(expiresAt) {
-    if (timerInterval) clearInterval(timerInterval);
-    const end = new Date(expiresAt).getTime();
-    timerInterval = setInterval(() => {
-      const diff = end - Date.now();
-      if (diff <= 0) { clearInterval(timerInterval); document.getElementById('timer').textContent = '00:00'; return; }
-      const m = Math.floor(diff / 60000);
-      const s = Math.floor((diff % 60000) / 1000);
-      document.getElementById('timer').textContent = `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
-    }, 1000);
-  }
 
   function copyPixKey() {
     navigator.clipboard.writeText('579.482.599-53');
