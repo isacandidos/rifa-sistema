@@ -34,6 +34,7 @@ async function initDB() {
       status TEXT NOT NULL DEFAULT 'pending',
       total NUMERIC NOT NULL,
       created_at TIMESTAMPTZ NOT NULL,
+      expires_at TIMESTAMPTZ NOT NULL,
       confirmed_at TIMESTAMPTZ
     );
 
@@ -49,7 +50,7 @@ async function initDB() {
 // --- Auth middleware ---
 function adminAuth(req, res, next) {
   const auth = req.headers['x-admin-auth'];
-  if (auth === 'admin:485327') return next();
+  if (auth === 'admin:1234') return next();
   return res.status(401).json({ error: 'Não autorizado' });
 }
 
@@ -75,7 +76,7 @@ app.get('/api/numbers', async (req, res) => {
   }
 });
 
-// Reserve numbers (sem expiração)
+// Reserve numbers (before payment)
 app.post('/api/reserve', async (req, res) => {
   const { numbers, name, phone } = req.body;
   if (!numbers || !Array.isArray(numbers) || numbers.length === 0)
@@ -87,6 +88,7 @@ app.post('/api/reserve', async (req, res) => {
   try {
     await client.query('BEGIN');
 
+    // Trava as linhas para evitar race condition
     const { rows: unavailableRows } = await client.query(
       `SELECT number FROM numbers WHERE number = ANY($1) AND status != 'available'`,
       [numbers]
@@ -100,13 +102,14 @@ app.post('/api/reserve', async (req, res) => {
     }
 
     const reservationId = `RES-${Date.now()}`;
+    const expiresAt = new Date(Date.now() + 30 * 60 * 1000);
     const createdAt = new Date();
     const total = numbers.length * 2;
 
     await client.query(
-      `INSERT INTO purchases (id, name, phone, status, total, created_at)
-       VALUES ($1, $2, $3, 'pending', $4, $5)`,
-      [reservationId, name, phone, total, createdAt]
+      `INSERT INTO purchases (id, name, phone, status, total, created_at, expires_at)
+       VALUES ($1, $2, $3, 'pending', $4, $5, $6)`,
+      [reservationId, name, phone, total, createdAt, expiresAt]
     );
 
     for (const n of numbers) {
@@ -122,7 +125,7 @@ app.post('/api/reserve', async (req, res) => {
     }
 
     await client.query('COMMIT');
-    res.json({ reservationId, total });
+    res.json({ reservationId, total, expiresAt: expiresAt.toISOString() });
   } catch (err) {
     await client.query('ROLLBACK');
     console.error(err);
@@ -173,14 +176,24 @@ app.post('/api/confirm/:reservationId', adminAuth, async (req, res) => {
   }
 });
 
+// Expire old reservations manually
+app.post('/api/cleanup', async (req, res) => {
+  try {
+    const cleaned = await cleanupExpired();
+    res.json({ cleaned });
+  } catch (err) {
+    res.status(500).json({ error: 'Erro no cleanup' });
+  }
+});
+
 // ==========================================
 // ADMIN ROUTES
 // ==========================================
 
 app.post('/api/admin/login', (req, res) => {
   const { username, password } = req.body;
-  if (username === 'admin' && password === '485327') {
-    res.json({ token: 'admin:485327', success: true });
+  if (username === 'admin' && password === '1234') {
+    res.json({ token: 'admin:1234', success: true });
   } else {
     res.status(401).json({ error: 'Credenciais inválidas' });
   }
@@ -203,10 +216,11 @@ app.get('/api/admin/dashboard', adminAuth, async (req, res) => {
       );
       return {
         id: p.id, name: p.name, phone: p.phone, status: p.status,
-        statusLabel: p.status === 'confirmed' ? 'Confirmado' : 'Aguardando',
+        statusLabel: p.status === 'confirmed' ? 'Confirmado' : p.status === 'pending' ? 'Aguardando' : 'Expirado',
         total: p.total,
         numbers: numRows.map(r => r.number),
         createdAt: p.created_at,
+        expiresAt: p.expires_at,
         confirmedAt: p.confirmed_at || null
       };
     }));
@@ -236,6 +250,7 @@ app.delete('/api/admin/purchase/:id', adminAuth, async (req, res) => {
       await client.query(`UPDATE numbers SET status = 'available' WHERE number = $1`, [number]);
     }
 
+    // ON DELETE CASCADE cuida de purchase_numbers automaticamente
     await client.query('DELETE FROM purchases WHERE id = $1', [req.params.id]);
 
     await client.query('COMMIT');
@@ -248,6 +263,44 @@ app.delete('/api/admin/purchase/:id', adminAuth, async (req, res) => {
     client.release();
   }
 });
+
+// ==========================================
+// CLEANUP
+// ==========================================
+
+async function cleanupExpired() {
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+
+    const { rows: expired } = await client.query(
+      `SELECT id FROM purchases WHERE status = 'pending' AND expires_at < NOW()`
+    );
+
+    for (const { id } of expired) {
+      const { rows: numRows } = await client.query(
+        'SELECT number FROM purchase_numbers WHERE purchase_id = $1', [id]
+      );
+      for (const { number } of numRows) {
+        await client.query(
+          `UPDATE numbers SET status = 'available' WHERE number = $1 AND status = 'reserved'`, [number]
+        );
+      }
+      await client.query(`UPDATE purchases SET status = 'expired' WHERE id = $1`, [id]);
+    }
+
+    await client.query('COMMIT');
+    return expired.length;
+  } catch (err) {
+    await client.query('ROLLBACK');
+    console.error('Erro no cleanup:', err);
+    return 0;
+  } finally {
+    client.release();
+  }
+}
+
+setInterval(cleanupExpired, 5 * 60 * 1000);
 
 // --- Start ---
 initDB().then(() => {
